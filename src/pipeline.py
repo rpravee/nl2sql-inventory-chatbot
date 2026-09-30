@@ -1,6 +1,7 @@
 """The NL -> SQL -> result pipeline that ties everything together."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 import pandas as pd
@@ -11,6 +12,12 @@ from . import prompts
 from .database import get_schema_text, get_table_names, run_query
 from .llm import LLM
 from .sql_guard import UnsafeSQLError, extract_sql, validate_sql
+
+
+def clean_summary(text: str) -> str:
+    """Remove a leading 'Here is the explanation...:' line that chat models sometimes add."""
+    text = text.strip()
+    return re.sub(r"^\s*here(?:'s| is| are)[^\n]{0,150}?:\s*", "", text, count=1, flags=re.IGNORECASE).strip()
 
 
 class QueryError(RuntimeError):
@@ -102,6 +109,7 @@ class NL2SQLPipeline:
                 question=question, sql=sql, shown=len(shown), total=len(data), table=table)},
         ]
         try:
-            return self.llm.chat(messages, max_tokens=200, temperature=0.2).strip()
+            reply = self.llm.chat(messages, max_tokens=200, temperature=0.2)
         except Exception:  # the table is still useful even if the summary call fails
             return None
+        return clean_summary(reply)

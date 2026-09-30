@@ -60,3 +60,11 @@ def test_follow_up_history_is_sent(engine):
         "and their cities?", history=[("List warehouses", "SELECT name FROM warehouses")])
     contents = [m["content"] for m in llm.calls[0]]
     assert "List warehouses" in contents
+
+
+def test_summary_preamble_is_removed():
+    from src.pipeline import clean_summary
+    raw = "Here's the explanation of the database query results to the warehouse manager:\n\nChennai has 5,997,914."
+    assert clean_summary(raw) == "Chennai has 5,997,914."
+    assert clean_summary("Here are 3 warehouses in total.") == "Here are 3 warehouses in total."
+    assert clean_summary("Nothing matched.") == "Nothing matched."
