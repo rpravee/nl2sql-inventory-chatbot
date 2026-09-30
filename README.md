@@ -2,6 +2,8 @@
 
    **Live demo:** https://praveena-nl2sql-chatbot.streamlit.app
 
+   ![Inventory Chatbot](screenshot.png)
+
 Ask questions about inventory data in plain English and get back the SQL, the result table, and a short explanation.
 A Llama 3 model (via Hugging Face) turns each question into a SQL query, which is **validated and run read-only**.
 
