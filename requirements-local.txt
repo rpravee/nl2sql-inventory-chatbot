@@ -1,0 +1,6 @@
+# Only needed for LLM_BACKEND=local (runs the model on your own machine).
+# An 8B model needs a GPU; on CPU use a small model such as meta-llama/Llama-3.2-1B-Instruct.
+-r requirements.txt
+transformers>=4.44
+torch
+accelerate
