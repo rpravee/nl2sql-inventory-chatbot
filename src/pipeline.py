@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from numbers import Integral, Real
 from dataclasses import dataclass, field
 
 import pandas as pd
@@ -12,6 +13,24 @@ from . import prompts
 from .database import get_schema_text, get_table_names, run_query
 from .llm import LLM
 from .sql_guard import UnsafeSQLError, extract_sql, validate_sql
+
+
+def format_value(value) -> str:
+    """Human-friendly number/text formatting for the summary prompt (5997914.0 -> 5,997,914)."""
+    if value is None or (isinstance(value, float) and value != value):
+        return "NULL"
+    if isinstance(value, bool):
+        return str(value)
+    if isinstance(value, Integral):
+        return f"{int(value):,}"
+    if isinstance(value, Real):
+        return f"{int(value):,}" if float(value).is_integer() else f"{float(value):,.2f}"
+    return str(value)
+
+
+def format_table(data: pd.DataFrame) -> str:
+    rows = [" | ".join(format_value(v) for v in row) for row in data.itertuples(index=False, name=None)]
+    return "\n".join([" | ".join(map(str, data.columns)), *rows])
 
 
 def clean_summary(text: str) -> str:
@@ -102,7 +121,7 @@ class NL2SQLPipeline:
 
     def _summarize(self, question: str, sql: str, data: pd.DataFrame, max_rows: int = 20) -> str | None:
         shown = data.head(max_rows)
-        table = shown.to_csv(index=False) if not shown.empty else "(no rows)"
+        table = format_table(shown) if not shown.empty else "(no rows)"
         messages = [
             {"role": "system", "content": prompts.SUMMARY_SYSTEM},
             {"role": "user", "content": prompts.SUMMARY_USER_TEMPLATE.format(

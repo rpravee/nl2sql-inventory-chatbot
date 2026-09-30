@@ -68,3 +68,15 @@ def test_summary_preamble_is_removed():
     assert clean_summary(raw) == "Chennai has 5,997,914."
     assert clean_summary("Here are 3 warehouses in total.") == "Here are 3 warehouses in total."
     assert clean_summary("Nothing matched.") == "Nothing matched."
+
+
+def test_summary_prompt_gets_readable_numbers(engine):
+    llm = FakeLLM([
+        "SELECT w.name AS warehouse, SUM(s.quantity * p.unit_price) AS stock_value FROM stock s "
+        "JOIN products p ON p.product_id = s.product_id JOIN warehouses w ON w.warehouse_id = s.warehouse_id "
+        "GROUP BY w.name ORDER BY w.name",
+        "ok",
+    ])
+    NL2SQLPipeline(llm, engine).ask("Stock value per warehouse?")
+    summary_prompt = llm.calls[1][-1]["content"]
+    assert "5,997,914" in summary_prompt and ".0" not in summary_prompt

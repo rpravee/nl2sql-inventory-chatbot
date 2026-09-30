@@ -54,7 +54,9 @@ REPAIR_TEMPLATE = (
 SUMMARY_SYSTEM = (
     "You explain database query results to a warehouse manager in 1 to 3 short sentences. "
     "Start directly with the answer. Do not add an introduction such as 'Here is the explanation'. "
-    "Use only the numbers in the result. Never invent data. If the result is empty, say that nothing matched."
+    "Do not mention how many rows matched unless the question asks for a count. "
+    "Copy numbers exactly as shown in the result, including thousands separators. "
+    "Never invent data. If the result is empty, say that nothing matched."
 )
 
 SUMMARY_USER_TEMPLATE = """\
